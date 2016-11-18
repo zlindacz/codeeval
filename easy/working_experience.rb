@@ -1,5 +1,69 @@
+# time travels in a single direction, thus a point in time is only encountered once, and therefore can be uniquely identified
+# the problem states that "The dates are in a range from Jan 1990 to Dec 2020."
+# each experience is expressed in this format: "Feb 2004-Dec 2009"
+# therefore each month-year combination can be written as distance from the beginning (Jan 1990), in months
+# for example, Feb 2004 is (2004-1999) * 12 + (2-1) = 61 months away from Jan 1990
+# because start date is start of month and end date is end of month, when we calculate time between start and end dates we have to account for the month in between (e.g. Jun 2009 - Jul 2009 is actually 2 months because 6/1/2009 - 7/31/2009)
+
+START_YEAR = 1990
+def transform_line_to_dates(line)
+  # line = 'Feb 2004-Dec 2009; Sep 2004-Jul 2008'
+  line = line.chomp.split('; ')
+  line.map { |date_range| date_range.split('-')}
+  # [["Feb 2004", "Dec 2009"], ["Sep 2004", "Jul 2008"]]
+end
+
+def transform_date_to_months(date)
+  months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+  date = date.split(' ')
+  year = date.last
+  month = months.index(date.first)
+  (year.to_i-START_YEAR) * 12 + month
+end
+
+File.open(ARGV[0]).each_line do |line|
+  line = transform_line_to_dates(line)
+
+  new_dates = line.map do |date_range|
+    [transform_date_to_months(date_range[0]), transform_date_to_months(date_range[1]) + 1]
+    # +1 because ending month is at end of month, unlike starting month
+  end
+  # [[169, 240], [176, 224]]
+
+  new_dates = new_dates.sort
+  time = 0
+  start_time = new_dates.first[0]
+  end_time = new_dates.first[1]
+
+  new_dates.slice(1, new_dates.length-1).each do |date|
+    if date.first > end_time
+      time += end_time - start_time
+      start_time = date.first
+      end_time = date.last
+    elsif date.last > end_time
+      end_time = date.last
+    end
+    if date == new_dates[-1]
+      time += end_time - start_time
+    end
+  end
+  puts time/12
+end
+
+
+
+
+
+
+
+# decimal approach
+
 def time_between_dates(date1, date2)
-  date2.to_f - date1.to_f
+  # start date is start of month and end date is end of month so
+  # add 1/12.0 at the end to account for days in between and to
+  # make it a float to better accuracy until rounding at the end
+  date2.to_f - date1.to_f + 1/12.0
 end
 
 def convert_date_to_decimal(date) # date = 'Feb 2004'
@@ -32,7 +96,7 @@ File.open(ARGV[0]).each_line do |line|
       time += time_between_dates(start_time, end_time)
     end
   end
-  puts time.to_i + 1/12
+  puts time.to_i
 end
 
 
