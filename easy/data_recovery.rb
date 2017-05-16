@@ -29,3 +29,19 @@ CONSTRAINTS:
 The number of test cases is in a range from 20 to 40.
 The words consist of ASCII uppercase and lowercase letters, digits, and punctuation marks.
 =end
+File.open(ARGV[0]).each_line do |line|
+  line = line.chomp
+  raw = line.split(';')
+  scrambled_words = raw[0].split(' ')
+  indices = raw[1].split(' ').map { |digit| digit.to_i }
+  ordered_words = Array.new(indices.size, '')
+
+  # max of indices minus sum of listed indices
+  missing_index = (1..scrambled_words.size).to_a.reduce(:+) - indices.reduce(:+)
+  indices.push(missing_index)
+
+  indices.each do |index|
+    ordered_words[index] = scrambled_words.shift
+  end
+  puts ordered_words.join(' ')
+end
